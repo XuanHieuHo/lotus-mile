@@ -1,0 +1,4 @@
+@import './tailwind.css';
+
+/* Global reset/variables optional */
+:root { color-scheme: light dark; }
