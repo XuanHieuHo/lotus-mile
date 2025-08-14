@@ -12,13 +12,15 @@ import AdminClaimReviewPage from "@/pages/AdminClaimReviewPage";
 import AdminTransactionsPage from "@/pages/AdminTransactionsPage";
 import AdminTxnCreatePage from "@/pages/AdminTxnCreatePage";
 import AdminTxnSuccessPage from "@/pages/AdminTxnSuccessPage";
+import NewClaimPage from "@/pages/NewClaimPage";
 
 export const router = createBrowserRouter([
-  { path: "/", element: <div className="p-6">Home</div> },
+  { path: "/", element: <LoginPage /> },
 
   // user routes
   { path: "/dashboard", element: <DashboardPage /> },
   { path: "/claims", element: <ClaimsListPage /> },
+  { path: '/claims/new', element: < NewClaimPage/> },
   { path: '/claims/submit-success', element: < SubmitSuccessPage/> },
   { path: '/claims/:code', element: <ClaimDetailPage /> },
   { path: '/profile', element: <ProfilePage /> },

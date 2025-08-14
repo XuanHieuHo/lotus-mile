@@ -9,7 +9,7 @@ export default function ClaimsListPage() {
   const {
     q, setQ, status, setStatus, time, setTime,
     total, items,
-    page, totalPages,
+    page, totalPages, startIndex, endIndex,
     nextPage, prevPage, goTo,
   } = useClaims()
 
@@ -79,6 +79,11 @@ export default function ClaimsListPage() {
             </div>
           </div>
         </div>
+
+        {/* Count */}
+        <p className="mt-3 text-sm text-slate-500">
+          Showing {total === 0 ? 0 : startIndex + 1}–{endIndex} of {total} claims
+        </p>
 
         {/* Table */}
         <div className="mt-4">
