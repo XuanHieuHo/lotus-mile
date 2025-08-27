@@ -42,6 +42,14 @@ httpAuth.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  if (config.data instanceof FormData) {
+    // xoá header json, giữ nguyên FormData
+    if (config.headers) {
+      delete (config.headers as any)['Content-Type']
+      delete (config.headers as any)['content-type']
+    }
+    config.transformRequest = [(d) => d]
+  }
   return config;
 });
 

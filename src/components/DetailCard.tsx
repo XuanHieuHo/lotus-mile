@@ -1,6 +1,6 @@
-import type { ClaimDetail } from '@/api/claim_detail.api'
+import type { Claim } from "@/api/claims.api";
 
-export default function DetailCard({ d }: { d: ClaimDetail }) {
+export default function DetailCard({ d }: { d: Claim }) {
   return (
     <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <div className="mb-4 flex items-center gap-3">
@@ -9,20 +9,20 @@ export default function DetailCard({ d }: { d: ClaimDetail }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Claim Type" value={d.type} />
+        <Field label="Claim Type" value={"Manual Request Miles"} />
         <Field
           label="Points Requested"
-          value={<span className="font-semibold text-emerald-600">+{d.pointsRequested.toLocaleString()} miles</span>}
+          value={<span className="font-semibold text-emerald-600">+{d.requested_points.toLocaleString()} miles</span>}
         />
-        <Field label="Date Submitted" value={fmt(d.submittedOn)} />
-        {d.processedOn && <Field label="Date Processed" value={fmt(d.processedOn)} />}
+        <Field label="Date Submitted" value={fmt(d.claim_date)} />
+        {/* {d.processedOn && <Field label="Date Processed" value={fmt(d.processedOn)} />} */}
       </div>
 
       <hr className="my-5" />
 
       <div>
         <div className="mb-1 text-xs font-medium text-slate-500">Description</div>
-        <div className="rounded-xl bg-slate-50 p-4 text-slate-800">{d.description}</div>
+        <div className="rounded-xl bg-slate-50 p-4 text-slate-800">{d.note}</div>
       </div>
     </div>
   )

@@ -1,73 +1,106 @@
-import { useMemo, useState } from 'react'
-import type { AdminClaimRow, AdminStatus, DateRange } from '@/api/admin_claims'
-
-// mock; thay bằng useQuery gọi API thật khi cần
-const DATA: AdminClaimRow[] = [
-  { id: 'CLM-2024-001', submitted: '2024-01-15', member: 'john.doe@example.com',  type: 'Flight Delay',         status: 'Pending',  points:  5000 },
-  { id: 'CLM-2024-002', submitted: '2024-01-14', member: 'jane.smith@example.com', type: 'Lost Luggage',        status: 'Approved', points: 10000 },
-  { id: 'CLM-2024-003', submitted: '2024-01-13', member: 'mike.johnson@example.com',type: 'Hotel Stay',         status: 'Rejected', points:  2500 },
-  { id: 'CLM-2024-004', submitted: '2024-01-12', member: 'sarah.wilson@example.com',type: 'Car Rental',         status: 'Pending',  points:  3000 },
-  { id: 'CLM-2024-005', submitted: '2024-01-11', member: 'david.brown@example.com', type: 'Flight Cancellation', status: 'Approved', points: 15000 },
-  { id: 'CLM-2024-006', submitted: '2024-01-10', member: 'lucy.gray@example.com',   type: 'Hotel Stay',          status: 'Approved', points:  2800 },
-  { id: 'CLM-2024-007', submitted: '2024-01-09', member: 'sam.wu@example.com',      type: 'Car Rental',          status: 'Rejected', points:   950 },
-];
+import { useEffect, useMemo, useState } from "react";
+import { type ClaimStatus, type Claim, getAdminClaims } from "@/api/claims.api";
 
 export function useAdminClaims() {
-  // filters
-  const [q, setQ] = useState('')
-  const [status, setStatus] = useState<'All' | AdminStatus>('All')
-  const [range, setRange] = useState<DateRange>({})
+  const [status, setStatus] = useState<"All" | ClaimStatus>("All");
 
-  // pagination
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  // Pagination state (server-side)
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const resetPage = () => setPage(1)
+  // Data state
+  const [items, setItems] = useState<Claim[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // filter + search + date range
-  const filtered = useMemo(() => {
-    const inRange = (d: string) => {
-      if (!range.from && !range.to) return true
-      const x = new Date(d).getTime()
-      if (range.from && x < new Date(range.from).getTime()) return false
-      if (range.to && x > new Date(range.to).getTime()) return false
-      return true
-    }
-    const text = q.trim().toLowerCase()
-    return DATA.filter(r =>
-      (status === 'All' || r.status === status) &&
-      inRange(r.submitted) &&
-      (text === '' ||
-        r.id.toLowerCase().includes(text) ||
-        r.member.toLowerCase().includes(text))
-    )
-  }, [q, status, range])
+  // fetch mỗi khi status/page/pageSize đổi
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    (async () => {
+      try {
+        const resp = await getAdminClaims({
+          status: status === "All" ? undefined : status,
+          size: pageSize,
+          page,
+        });
+        if (cancelled) return;
+        setItems(Array.isArray(resp.items) ? resp.items : []);
+      } catch (e: any) {
+        if (cancelled) return;
+        setError(e?.message ?? "Failed to fetch claims");
+        setItems([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
 
-  // slice page
-  const total = filtered.length
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  const currentPage = Math.min(page, totalPages)
-  const startIndex = (currentPage - 1) * pageSize
-  const endIndex = Math.min(startIndex + pageSize, total)
-  const items = filtered.slice(startIndex, endIndex)
+    return () => {
+      cancelled = true;
+    };
+  }, [status, page, pageSize]);
 
-  // pagination actions
-  const nextPage = () => setPage(p => Math.min(totalPages, p + 1))
-  const prevPage = () => setPage(p => Math.max(1, p - 1))
-  const goTo     = (p: number) => setPage(Math.max(1, Math.min(totalPages, p)))
-
-  // public API
-  return {
-    // data
-    items, total,
-
-    // filters
-    q, setQ: (v: string) => { setQ(v); resetPage() },
-    status, setStatus: (v: 'All' | AdminStatus) => { setStatus(v); resetPage() },
-    range, setRange: (v: DateRange) => { setRange(v); resetPage() },
-
-    // pagination
-    page: currentPage, pageSize, setPageSize, totalPages, startIndex, endIndex,
-    nextPage, prevPage, goTo,
+  // reset về trang 1 khi thay filter
+  function resetPage() {
+    setPage(1);
   }
+
+  // server không trả tổng -> suy ra khả năng có trang sau
+  const hasNext = items.length === pageSize;
+  const canPrev = page > 1;
+
+  function nextPage() {
+    setPage((p) => (hasNext ? p + 1 : p));
+  }
+  function prevPage() {
+    setPage((p) => (canPrev ? p - 1 : p));
+  }
+  function goTo(p: number) {
+    if (p < 1) return;
+    setPage(p);
+  }
+
+  // indices để UI hiển thị "showing x–y"
+  const startIndex = useMemo(
+    () => (items.length > 0 ? (page - 1) * pageSize + 1 : 0),
+    [page, pageSize, items.length]
+  );
+  const endIndex = useMemo(
+    () => (items.length > 0 ? (page - 1) * pageSize + items.length : 0),
+    [page, pageSize, items.length]
+  );
+
+  return {
+    // filter duy nhất khi gọi API
+    status,
+    setStatus: (v: "All" | ClaimStatus) => {
+      setStatus(v);
+      resetPage();
+    },
+
+    // data
+    items,
+    loading,
+    error,
+
+    // pagination (server-side)
+    page,
+    pageSize,
+    setPageSize: (n: number) => {
+      setPageSize(n);
+      resetPage();
+    },
+    // server không trả tổng -> trả null để UI tự xử lý phù hợp
+    total: null as number | null,
+    totalPages: null as number | null,
+    startIndex,
+    endIndex,
+
+    hasNext,
+    canPrev,
+    nextPage,
+    prevPage,
+    goTo,
+  };
 }

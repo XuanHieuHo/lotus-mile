@@ -1,6 +1,8 @@
+import { useProfile } from "@/hooks/useProfile";
 import { Link, NavLink } from "react-router-dom";
 
 export default function Topbar() {
+  const { data, initials } = useProfile()
   return (
     <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-slate-200">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
@@ -48,10 +50,10 @@ export default function Topbar() {
           </button>
           <div className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-full bg-blue-900 text-white">
-              SJ
+            {initials}
             </div>
             <span className="hidden text-sm font-medium text-slate-800 md:inline">
-              Sarah Johnson
+              { data.email || data.name }
             </span>
           </div>
         </div>

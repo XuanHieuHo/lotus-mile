@@ -1,26 +1,22 @@
 import { Link } from "react-router-dom";
 import AdminTopbar from "../components/AdminTopbar";
-import StatusPill from "../components/StatusPill";
 import { useAdminClaims } from "@/hooks/useAdminClaims";
-import Pagination from "@/components/Pagination"; // tái dùng component bạn đã có
+import { StatusPill } from "@/components/ClaimsTable";
+
 
 export default function AdminClaimsPage() {
   const {
-    q,
-    setQ,
-    status,
-    setStatus,
-    range,
-    setRange,
-    items,
-    total,
-    page,
-    totalPages,
-    startIndex,
-    endIndex,
-    nextPage,
-    prevPage,
-    goTo,
+    // filter duy nhất khi call API
+    status, setStatus,
+
+    // data
+    items, loading, error,
+
+    // pagination (server-side)
+    page, pageSize, setPageSize,
+    startIndex, endIndex,
+    hasNext, canPrev,
+    nextPage, prevPage, goTo,
   } = useAdminClaims();
 
   return (
@@ -33,63 +29,59 @@ export default function AdminClaimsPage() {
         </h1>
 
         {/* filter bar */}
-        <div className="mt-4 flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1">
-            <input
-              placeholder="Search by member email or claim ID…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pl-10 text-sm text-slate-800 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-            />
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-              🔎
-            </span>
-          </div>
-
-          <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2">
-              <span>⚙️</span>
+        <div className="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-slate-600">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
-                className="bg-transparent text-sm text-slate-700 focus:outline-none"
+                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
                 title="Status"
               >
                 <option value="All">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
+                {/* hook dùng status UPPERCASE theo API: PENDING/APPROVED/REJECTED */}
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
               </select>
+
+              <label className="ml-4 text-sm text-slate-600">Page size</label>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                title="Page size"
+              >
+                {[5, 10, 20, 50].map((n) => (
+                  <option key={n} value={n}>{n}/page</option>
+                ))}
+              </select>
+
+              <button
+                onClick={() => { setStatus('All'); goTo(1); }}
+                className="ml-2 inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                title="Clear filters"
+              >
+                ⟳ <span>Clear</span>
+              </button>
             </div>
 
-            {/* Date range (demo đơn giản) */}
-            <div
-              className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2"
-              title="Date Range"
-            >
-              <span className="text-slate-600">📅</span>
-              <input
-                type="date"
-                value={range.from ?? ""}
-                onChange={(e) => setRange({ ...range, from: e.target.value })}
-                className="bg-transparent text-sm text-slate-800 focus:outline-none"
-                aria-label="From date"
-              />
-              <span className="select-none text-slate-400">–</span>
-              <input
-                type="date"
-                value={range.to ?? ""}
-                onChange={(e) => setRange({ ...range, to: e.target.value })}
-                className="bg-transparent text-sm text-slate-800 focus:outline-none"
-                aria-label="To date"
-              />
+            {/* State nhỏ gọn bên phải */}
+            <div className="text-sm text-slate-500">
+              {loading && <span>Loading…</span>}
+              {!loading && error && <span className="text-rose-600">Error: {error}</span>}
             </div>
           </div>
         </div>
 
+        {/* Count */}
         <p className="mt-3 text-sm text-slate-500">
-          Showing {total === 0 ? 0 : startIndex + 1}–{endIndex} of {total}{" "}
-          claims
+          {loading
+            ? 'Loading…'
+            : items.length === 0
+              ? 'No claims to display'
+              : <>Showing {startIndex}–{endIndex}</>}
         </p>
 
         {/* table */}
@@ -100,7 +92,7 @@ export default function AdminClaimsPage() {
                 <th className="px-5 py-3 font-medium">Claim ID</th>
                 <th className="px-5 py-3 font-medium">Submitted Date</th>
                 <th className="px-5 py-3 font-medium">Member</th>
-                <th className="px-5 py-3 font-medium">Type</th>
+                <th className="px-5 py-3 font-medium">Invoice Number</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Points</th>
                 <th className="px-5 py-3 font-medium">Actions</th>
@@ -113,19 +105,20 @@ export default function AdminClaimsPage() {
                     {r.id}
                   </td>
                   <td className="px-5 py-4 text-slate-700">
-                    {new Date(r.submitted).toLocaleDateString()}
+                    {new Date(r.claim_date).toLocaleDateString()}
                   </td>
-                  <td className="px-5 py-4 text-slate-700">{r.member}</td>
-                  <td className="px-5 py-4 text-slate-700">{r.type}</td>
+                  <td className="px-5 py-4 text-slate-700">{r.user_id}</td>
+                  <td className="px-5 py-4 text-slate-700">{r.invoice_no}</td>
                   <td className="px-5 py-4">
-                    <StatusPill status={r.status} />
+                    <StatusPill s={r.status} />
                   </td>
                   <td className="px-5 py-4 text-slate-700">
-                    {r.points.toLocaleString()}
+                    {r.requested_points.toLocaleString()}
                   </td>
                   <td className="px-5 py-4">
                     <Link
                       to={`/admin/claims/${r.id}/review`}
+                      state={{ claim: r }}
                       className="text-slate-600 hover:text-slate-900"
                     >
                       👁️ View
@@ -148,14 +141,54 @@ export default function AdminClaimsPage() {
         </div>
 
         {/* pagination */}
-        <div className="mt-4 flex items-center justify-end">
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPrev={prevPage}
-            onNext={nextPage}
-            onGo={goTo}
-          />
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+          <div className="flex items-center gap-3">
+            <span>Page {page}</span>
+            <div className="inline-flex overflow-hidden rounded-xl border border-slate-300">
+              <button
+                onClick={prevPage}
+                disabled={!canPrev || loading}
+                className={`px-3 py-2 ${(!canPrev || loading) ? 'cursor-not-allowed text-slate-400 bg-slate-100' : 'hover:bg-slate-50'}`}
+                title="Previous page"
+              >
+                ← Prev
+              </button>
+              <button
+                onClick={nextPage}
+                disabled={!hasNext || loading}
+                className={`border-l border-slate-300 px-3 py-2 ${(!hasNext || loading) ? 'cursor-not-allowed text-slate-400 bg-slate-100' : 'hover:bg-slate-50'}`}
+                title="Next page"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+
+          {/* (Optional) Quick jump */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget as HTMLFormElement);
+              const v = Number(fd.get('p') || 1);
+              if (Number.isFinite(v) && v >= 1) goTo(v);
+            }}
+            className="hidden items-center gap-2 md:flex"
+          >
+            <label className="text-slate-500">Go to page</label>
+            <input
+              name="p"
+              type="number"
+              min={1}
+              className="w-20 rounded-lg border border-slate-300 bg-white px-2 py-1"
+              placeholder="1"
+            />
+            <button
+              type="submit"
+              className="rounded-lg border border-slate-300 px-3 py-1 hover:bg-slate-50"
+            >
+              Go
+            </button>
+          </form>
         </div>
       </main>
     </div>

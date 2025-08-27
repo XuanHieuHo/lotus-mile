@@ -10,10 +10,10 @@ type Props = {
 }
 
 export default function PersonalEditCard({ data, onSave, onCancel }: Props) {
-  const [fullName, setFullName] = useState(data.fullName)
+  const [name, setName] = useState(data.name)
   const [email, setEmail] = useState(data.email)
   const [phone, setPhone] = useState(data.phone)
-  const [dob, setDob] = useState(data.dob)
+  const [birthday, setBirthday] = useState(data.birthday)
 
   // password
   const [currentPassword, setCurrentPassword] = useState('')
@@ -31,10 +31,10 @@ export default function PersonalEditCard({ data, onSave, onCancel }: Props) {
 
       <div className="flex items-center gap-4">
         <div className="grid h-16 w-16 place-items-center rounded-full bg-blue-900 text-white text-lg font-bold">
-          {fullName.split(' ').map(n => n[0]).slice(0,2).join('')}
+          {name.split(' ').map(n => n[0]).slice(0,2).join('')}
         </div>
         <div>
-          <div className="text-lg font-semibold text-slate-900">{fullName}</div>
+          <div className="text-lg font-semibold text-slate-900">{name}</div>
           <div className="text-sm text-slate-500">
             Member since {new Date(data.memberSince + '-01').toLocaleString(undefined, { month: 'long', year: 'numeric' })}
           </div>
@@ -46,7 +46,7 @@ export default function PersonalEditCard({ data, onSave, onCancel }: Props) {
       {/* Info fields */}
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label="Full Name">
-          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-11 rounded-xl" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl" />
         </FormField>
         <FormField label="Email Address">
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-xl" />
@@ -55,7 +55,7 @@ export default function PersonalEditCard({ data, onSave, onCancel }: Props) {
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="h-11 rounded-xl" />
         </FormField>
         <FormField label="Date of Birth">
-          <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="h-11 rounded-xl" />
+          <Input type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} className="h-11 rounded-xl" />
         </FormField>
       </div>
 
@@ -97,7 +97,7 @@ export default function PersonalEditCard({ data, onSave, onCancel }: Props) {
           className="rounded-xl"
           disabled={!canSavePwd}
           onClick={() =>
-            onSave({ fullName, email, phone, dob, ...(newPassword ? { currentPassword, newPassword } : {}) })
+            onSave({ name, email, phone, birthday, ...(newPassword ? { currentPassword, newPassword } : {}) })
           }
         >
           Save Changes
