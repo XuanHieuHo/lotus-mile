@@ -2,12 +2,10 @@ import Topbar from '@/components/Topbar'
 import Button from '@/components/Button'
 import { NewClaimCard, ViewClaimsCard, ProfileCard } from '@/components/DashboardCards'
 import ActivityList from '@/components/ActivityList'
-import { useDashboard } from '@/hooks/useDashboard'
 import { useProfile } from '@/hooks/useProfile'
 import { useClaims } from '@/hooks/useClaims'
 
 export default function DashboardPage() {
-  const { activeClaims, activities } = useDashboard()
   const {data} = useProfile()
   const {items} = useClaims()
 
@@ -35,7 +33,7 @@ export default function DashboardPage() {
         {/* Cards */}
         <section className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <NewClaimCard />
-          <ViewClaimsCard active={activeClaims} />
+          <ViewClaimsCard active={0} />
           <ProfileCard />
         </section>
 
