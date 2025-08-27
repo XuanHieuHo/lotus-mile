@@ -11,6 +11,7 @@ const DEFAULTS: ProfileData = {
   tier: 'Gold',
   tierProgress: 73,
   nextTierMilesNeeded: 27500,
+  total_miles: 99,
   availableMiles: 72500,
   benefits: ['50% bonus miles', 'Lounge access', 'Priority boarding', 'Free upgrades'],
 }
@@ -62,6 +63,8 @@ export function useProfile() {
           availableMiles:
             typeof api?.availableMiles === 'number' ? api.availableMiles : DEFAULTS.availableMiles,
           benefits: Array.isArray(api?.benefits) ? api.benefits : DEFAULTS.benefits,
+          total_miles:
+            typeof api?.total_miles === 'number' ? api.total_miles : DEFAULTS.total_miles,
         }
 
         setState({ status: 'success', data: merged, error: null })

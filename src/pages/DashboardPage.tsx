@@ -3,9 +3,11 @@ import Button from '@/components/Button'
 import { NewClaimCard, ViewClaimsCard, ProfileCard } from '@/components/DashboardCards'
 import ActivityList from '@/components/ActivityList'
 import { useDashboard } from '@/hooks/useDashboard'
+import { useProfile } from '@/hooks/useProfile'
 
 export default function DashboardPage() {
-  const { name, tier, balance, activeClaims, activities } = useDashboard()
+  const { activeClaims, activities } = useDashboard()
+  const {data} = useProfile()
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -14,16 +16,16 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 pb-16 pt-8">
         {/* Hero */}
         <section className="relative rounded-3xl bg-white/60 p-6 shadow-sm ring-1 ring-slate-100">
-          <h1 className="text-3xl font-semibold text-slate-900">Welcome back, {name}!</h1>
+          <h1 className="text-3xl font-semibold text-slate-900">Welcome back, {data.email}!</h1>
           <p className="mt-1 text-slate-500">Manage your loyalty account and track your rewards</p>
           <div className="mt-3 inline-flex items-center gap-2 text-sm text-amber-600">
-            <span>⭐</span> <span>{tier}</span>
+            <span>⭐</span> <span>{data.tier}</span>
           </div>
 
           {/* Balance badge (right) */}
           <div className="absolute right-6 top-6 hidden rounded-2xl bg-white/80 p-4 text-right shadow-sm ring-1 ring-slate-100 md:block">
             <div className="text-sm font-medium text-amber-500">Current Balance</div>
-            <div className="text-4xl font-extrabold text-slate-900">{balance.toLocaleString()}</div>
+            <div className="text-4xl font-extrabold text-slate-900">{data.total_miles.toLocaleString()}</div>
             <div className="text-xs text-slate-400">Miles</div>
           </div>
         </section>

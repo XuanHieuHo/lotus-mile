@@ -5,6 +5,7 @@ export interface ProfileData {
   name: string
   email: string
   phone: string
+  total_miles: number
   birthday: string // yyyy-mm-dd
   memberSince: string // yyyy-mm
   tier: 'Gold' | 'Silver' | 'Platinum'
