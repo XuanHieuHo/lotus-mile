@@ -4,10 +4,12 @@ import { NewClaimCard, ViewClaimsCard, ProfileCard } from '@/components/Dashboar
 import ActivityList from '@/components/ActivityList'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useProfile } from '@/hooks/useProfile'
+import { useClaims } from '@/hooks/useClaims'
 
 export default function DashboardPage() {
   const { activeClaims, activities } = useDashboard()
   const {data} = useProfile()
+  const {items} = useClaims()
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -39,7 +41,7 @@ export default function DashboardPage() {
 
         {/* Recent Activity */}
         <section className="mt-8">
-          <ActivityList items={activities} />
+          <ActivityList items={items} />
         </section>
       </main>
 
